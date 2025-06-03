@@ -1,5 +1,5 @@
 void sdc_f( curve_struct cr_grp[] ) {
-
+#ifdef  D_use_SD
 static uint16_t l_from, l_to   = 0;
 static boolean open_ok;
 String dataString;
@@ -62,4 +62,5 @@ if (gl_xpic > l_to) {
       snprintf(ad_hoc.txt, 16, "SD OP ErrorErEr") ; hfq_message(lower_disp, ad_hoc); spln(ad_hoc.txt); 
     }
 }
+#endif
 }

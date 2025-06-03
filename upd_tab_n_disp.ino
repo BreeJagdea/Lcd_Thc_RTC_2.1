@@ -4,7 +4,9 @@ update_time(timers);
 gl_xpic   =  long (( (float(timers.sec_of_today) * gl_fl_hist_size_m1) / gl_fl_sec_of_a_day )  + 0.5 ); // 0 - 319, == hist_size 320, One Tick in thie case = 4:30       
 gl_disp_x = (gl_xpic)/cr_grp[icg].x_ratio;
 
+#ifdef D_use_SD
 sdc_f(cr_grp);
+#endif
 
 #ifdef D_V20
 import_data(f, dobj[icg].ds_cur);    

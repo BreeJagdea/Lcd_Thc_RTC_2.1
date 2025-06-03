@@ -1,19 +1,19 @@
 /*
 https://lowpowerlab.github.io/MoteinoCore/package_LowPowerLab_index.json
 */
-#define  D_Summer  //Or Winter
+#define  D_Summer  // comment it  ->  Winter
+#define  D_V20     // comment it  ->  V21 becomes active
+#define  D_use_SD  // comment it  ->  No output to SD card
 
-#define D_V20   //
-
-#define D_V21   //
+#define  D_V21   
 //#define D_REMOTE_ONLY
 
-#ifdef D_V20
+#ifdef  D_V20
  #undef D_V21
  #undef D_REMOTE_ONLY
 #endif
 
-#ifdef D_REMOTE_ONLY
+#ifdef  D_REMOTE_ONLY
 #define D_V21
 #endif
 
@@ -316,6 +316,7 @@ uint16_t       gl_disp_x_old=0;
 uint16_t       gl_x_dim = 1;         //Point-Dimension  // Für die dichteren Punkte der V20
 const float    gl_fl_sec_of_a_day = 86400;  
 
+
 #ifdef D_V20
 const uint8_t  gl_sens_anz_graph = 2;
       uint8_t  rftemp_poi, rfhum_poi = 0;
@@ -340,11 +341,12 @@ const uint8_t   gl_x_gap = 15;
 uint16_t        gl_disp_x_prev[disp_anz]; // idexed by curve_group.disp;
 #endif //D_V21
 
-
+#ifdef D_use_SD
 #include <SD.h>
 const int      sd_pin = 3;
 const uint16_t time_frame = 3600;  // Time window between log of data to sd card; ge 180 /  520 
       uint16_t gl_sd_anz  = time_frame / (gl_fl_sec_of_a_day / gl_hist_size);  // result pls larger than 1, 1h = 40 bzw 13.3 (320: 4,5 min/pkt; 960 1,5 min per pkt (sec aus 86000 pro 320 pkt faktor 3) )
+#endif
 
 #if defined(D_V20)
 const String   gl_sd_filename = "slog2.txt";
@@ -587,9 +589,11 @@ void setup()  {
   lfq_message(F("Graph Preps Proccessed"), 0);
 
 //SD Card data log
+#ifdef D_use_SD
   if (gl_sd_anz < 2) gl_sd_anz = 2;
   spe(sd_pin); spe(time_frame); spe(gl_sd_anz); spln();;
   lfq_message(F("Going to loop"), 100);spln();
+#endif
 } //Setup
 
 
