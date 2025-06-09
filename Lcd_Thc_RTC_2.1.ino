@@ -1,6 +1,9 @@
 /*
 https://lowpowerlab.github.io/MoteinoCore/package_LowPowerLab_index.json
 */
+
+/* GPL V3 */
+
 #define  D_Summer  // comment it  ->  Winter
 #define  D_V20     // comment it  ->  V21 becomes active
 #define  D_use_SD  // comment it  ->  No output to SD card
