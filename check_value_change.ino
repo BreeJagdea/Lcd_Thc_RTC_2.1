@@ -53,7 +53,7 @@ void import_data(float f, data_struct &ds){
        ds.ival_10 = long ( (f - ds.r1) * ds.r2 ) ;  
        ds.fval    = float (ds.ival_10) / ds.r2 ;    ;//runden 1 stelle
     }
-  strcpy(ds.time, sprintTime());
+  strcpy(ds.time, sprintTime(1));
   //spe(f); spe(ds.fval); spe(ds.ival_10); spe(ds.time); spln();
 }
 //EOF

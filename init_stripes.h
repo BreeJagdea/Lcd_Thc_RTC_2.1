@@ -267,5 +267,5 @@ void LED_Nr(WS2812 &LED, uint8_t col_nr, uint8_t ziff, uint8_t at , cRGB val) {
   }
  LED.sync();
  }
- 
+
 // EOF

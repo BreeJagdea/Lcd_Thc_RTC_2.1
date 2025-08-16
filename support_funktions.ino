@@ -146,11 +146,10 @@ void prdata(){
   //Serial.print( bme.readTemperature() ); Serial.print("  ");Serial.print(rf01.temp);Serial.print("    ->  ");Serial.print(in01.temp_therm); Serial.print("  ");Serial.print(rf01.temp_therm); Serial.print("  ");
   //Serial.print("Th  I            CC2           BME I  BME O  CC2");Serial.println();  
 
-  Serial.print(" ");Serial.print(sprintDate()); Serial.print(" "); Serial.print(sprintTime()); Serial.print("  ");
-  
+  Serial.print(" ");Serial.print(sprintDate()); Serial.print(" "); Serial.print(sprintTime(1)); Serial.print("  ");
+  #if !defined(D_REMOTE_ONLY) 
   Serial.print(local.temp ); Serial.print("C  ");
-  Serial.print(local.hum );  Serial.print("%   "); 
-  #ifdef D_REMOTE_ONLY
+  Serial.print(local.hum );  Serial.print("%   ");
   #else
   Serial.print(rf01.temp );  Serial.print("C  ");  
   Serial.print(rf01.hum );   Serial.print("%   ");  

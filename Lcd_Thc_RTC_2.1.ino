@@ -4,12 +4,12 @@ https://lowpowerlab.github.io/MoteinoCore/package_LowPowerLab_index.json
 
 /* GPL V3 */
 
-#define  D_Summer  // comment it  ->  Winter
-#define  D_V20     // comment it  ->  V21 becomes active
-#define  D_use_SD  // comment it  ->  No output to SD card
+#define  D_V20        // comment it  ->  V21 becomes active
+#define  D_STRIPES
+//#define  D_use_SD  // comment it  ->  No output to SD card
 
-#define  D_V21   
-//#define D_REMOTE_ONLY
+#define D_V21   
+#define D_REMOTE_ONLY
 
 #ifdef  D_V20
  #undef D_V21
@@ -18,8 +18,8 @@ https://lowpowerlab.github.io/MoteinoCore/package_LowPowerLab_index.json
 
 #ifdef  D_REMOTE_ONLY
 #define D_V21
+#undef D_STRIPES
 #endif
-
 
 //#define D_HTU21D
 //#define  D_SI7021
@@ -65,19 +65,19 @@ Adafruit_ILI9341 upper_disp(cs_1, dc_1, rst_1);
 
 #include <Adafruit_GFX.h>
 
-#ifdef D_Summer
-  //uint8_t mez_time_corr = 1;  // GPS: DST Sommerzeit (+2)  Winterzeit (+1);  DST3221: 0, or Summer(+1), Winter 0 
-  float   local_ul = 10.0 ;
-  float   local_ol = 30.0 ;  // Delta 20, Mitte 10+20/2
-  float   outer_ul = 10.0 ;
-  float   outer_ol = 30.0 ;  // Delta 20, Mitte 10+20/2
-#else
-  //uint8_t mez_time_corr = 0; // DST Sommerzeit (+2)  Winterzeit (+1)
-  float   local_ul = 10.0 ;
-  float   local_ol = 30.0 ;  // 20, Mitte 10+ 20/2 = 20 
-  float   outer_ul = -5.0 ; 
-  float   outer_ol = 20.0 ;  // 20, Mitte 0+ 20/2 = 10
-#endif
+//limits for LED Stripes 
+#define summer_local_ul  10.0
+#define summer_local_ol  30.0   // Delta 20, Mitte 10+20/2
+#define summer_outer_ul  10.0 
+#define summer_outer_ol  30.0   // Delta 20, Mitte 10+20/2
+#define winter_local_ul  10.0 
+#define winter_local_ol  30.0   // 20, Mitte 10+ 20/2 = 20 
+#define winter_outer_ul  -5.0  
+#define winter_outer_ol  20.0   // 20, Mitte 0+ 20/2 = 10
+
+float   local_ul ,local_ol;   //value assignemen in setup based on DST 
+float   outer_ul, outer_ol; 
+
 
 //*************************************************************************************************************** IIC
 // IIC Devices  0x27           28       29         0x40    0x42  43    44(45)      57        62      68     76    76, 77      
@@ -187,7 +187,8 @@ uint8_t  msglen = sizeof(rec_data);    // Max len, zu übergeben . finally hopef
 
 #include "RTClib.h"
 RTC_DS3231 rtc;    //IIC 68
-DateTime   rtc_now;
+DateTime   rtc_utc;
+DateTime   rtc_loc;
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};  //currently not used
 
 //********************************************************************************************** Sonstiges
@@ -208,11 +209,13 @@ struct timers_struct {
   int8_t hour;
   int8_t min;
   int8_t sec;
+  int8_t dow;       //0 to 6, for isDST and daysOfTheWeek frpm above
   int8_t hour_prev;
   int32_t sec_of_today;
   int32_t sec_of_today_prev;
+  boolean dst;
 };
-timers_struct timers = {false, false,0,  -1, -1,   -1, -1,   -1, -1, 0,0,0, -1, 0,-1  };
+timers_struct timers = {false, false,0,  -1, -1,   -1, -1,   -1, -1, 0,0,0,0, -1, 0,-1,true  };
 
 //**************************** Counter
 int16_t ct_missed_recs = 0;
@@ -304,10 +307,10 @@ struct mess_struct tl_le       { " ", "  ", 0, txt_size_mdm,   x_beg+ 0*x_size_m
 struct mess_struct tl_mid      { " ", "  ", 0, txt_size_mdm,   x_beg+ 10*x_size_mdm,  y_beg+1*y_size_mdm,  x_size_mdm,  y_size_mdm, BLUE , BLACK };
 struct mess_struct tl_re       { " ", "  ", 0, txt_size_mdm,   x_beg+ 12*x_size_mdm, y_beg+1*y_size_mdm,  x_size_mdm,  y_size_mdm,  CYAN , BLACK };
 #ifdef D_V21
-struct mess_struct lwr_ln3_le  { " ", "  ", 0, txt_size_lttl,  x_beg,                239-3*y_size_lttl-6, x_size_lttl, y_size_lttl, GREEN, BLACK }; 
-struct mess_struct lwr_ln3_re  { " ", "  ", 0, txt_size_lttl,  x_beg+13*x_size_lttl, 239-3*y_size_lttl-6, x_size_lttl, y_size_lttl, GREEN, BLACK }; 
-struct mess_struct lwr_ln2_le  { " ", "  ", 0, txt_size_lttl,  x_beg,                239-2*y_size_lttl-3, x_size_lttl, y_size_lttl, WHITE, BLACK }; 
-struct mess_struct lwr_ln2_re  { " ", "  ", 0, txt_size_lttl,  x_beg+13*x_size_lttl, 239-2*y_size_lttl-3, x_size_lttl, y_size_lttl, WHITE, BLACK }; 
+//struct mess_struct lwr_ln3_le  { " ", "  ", 0, txt_size_lttl,  x_beg,                239-3*y_size_lttl-6, x_size_lttl, y_size_lttl, GREEN, BLACK }; 
+//struct mess_struct lwr_ln3_re  { " ", "  ", 0, txt_size_lttl,  x_beg+13*x_size_lttl, 239-3*y_size_lttl-6, x_size_lttl, y_size_lttl, GREEN, BLACK }; 
+struct mess_struct lwr_ln2_le  { " ", "  ", 0, txt_size_lttl,  x_beg,                239-2*y_size_lttl-3, x_size_lttl, y_size_lttl, GREEN, BLACK }; 
+struct mess_struct lwr_ln2_re  { " ", "  ", 0, txt_size_lttl,  x_beg+13*x_size_lttl, 239-2*y_size_lttl-3, x_size_lttl, y_size_lttl, GREEN, BLACK }; 
 #endif
 struct mess_struct lwr_ln1_le  { " ", "  ", 0, txt_size_lttl,  x_beg,                239-y_size_lttl,     x_size_lttl, y_size_lttl, RED, BLACK };
 struct mess_struct lwr_ln1_re  { " ", "  ", 0, txt_size_lttl,  x_beg+13*x_size_lttl, 239-y_size_lttl,     x_size_lttl, y_size_lttl, RED, BLACK };  //14 to 12
@@ -322,7 +325,7 @@ const float    gl_fl_sec_of_a_day = 86400;
 
 #ifdef D_V20
 const uint8_t  gl_sens_anz_graph = 2;
-      uint8_t  rftemp_poi, rfhum_poi = 0;
+      uint8_t  rftemp_poi, rfhum_poi, co2_poi = 0;
 const uint16_t gl_hist_size      = 320;
 const float    gl_fl_hist_size   = float(gl_hist_size);
 const float    gl_fl_hist_size_m1   = gl_hist_size - 1;
@@ -331,7 +334,7 @@ const float    gl_fl_hist_size_m1   = gl_hist_size - 1;
 #ifdef D_V21
 #ifdef D_REMOTE_ONLY
 const uint8_t  gl_sens_anz_graph = 3;  // 0 1 2
-      uint8_t  rftemp_poi, rfhum_poi = 0;
+      uint8_t  rftemp_poi, rfhum_poi,co2_poi = 0;
 #else 
 const uint8_t  gl_sens_anz_graph = 4;  // 0 1 2 3
       uint8_t  loctemp_poi, co2_poi, rftemp_poi, rfhum_poi = 0;
@@ -434,8 +437,10 @@ SCD30 airSensor;
 SCD4x scd4x;  
 #endif
 
-#include "init_stripes.h"
-extern const uint8_t Col_Tab_Size;    // 23  120 LED/23 = 5.2 LED je Farbe 
+#if defined(D_STRIPES)
+#include "init_stripes.h"                                                        FUE250705
+extern const uint8_t Col_Tab_Size;    // 23  120 LED/23 = 5.2 LED je Farbe       FUE250705
+#endif
 //#include "init_routines.h"
 //#include "Support_Funktions.h"
 
@@ -444,6 +449,23 @@ extern const uint8_t Col_Tab_Size;    // 23  120 LED/23 = 5.2 LED je Farbe
 void setup()  {
   #define LCD_THC_21
   #include <begin.h>
+sp("Compiled with "); 
+#ifdef D_V20
+sp(" D_V20 "); 
+#endif
+#ifdef D_V21
+sp(" D_V21 ");
+#endif
+#ifdef D_REMOTE_ONLY
+sp(" D_REMOTE_ONLY ")
+#endif
+#ifdef D_STRIPES 
+sp(" D_STRIPES ")
+#endif
+#ifdef D_use_SD
+sp(" D_use_SD ")
+#endif
+spln();spln();
 
 //for (uint8_t i=16; i>=0; i--) {
 //       Serial.print(i); Serial.print(";");
@@ -452,11 +474,14 @@ void setup()  {
      
   
   Serial.println("Initialising");
+#if defined (D_STRIPES)
   Stripes_Init();
+  Col_Tab_Init();
+#endif 
   Sensor_Init();  
   RTC_Init();
   Radio_Init();
-  Col_Tab_Init();
+  
   Serial.println("Initialising 1 done");
 
 // Display and graphics
@@ -595,8 +620,14 @@ void setup()  {
 #ifdef D_use_SD
   if (gl_sd_anz < 2) gl_sd_anz = 2;
   spe(sd_pin); spe(time_frame); spe(gl_sd_anz); spln();;
-  lfq_message(F("Going to loop"), 100);spln();
 #endif
+
+//Some final simple thing; To perfom at Init and at day witch 
+
+update_time(timers);
+stripes_limit();
+lfq_message(F("Going to loop"), 100);spln();
+
 } //Setup
 
 
@@ -632,15 +663,18 @@ void loop() {  //***************************************************************
            //Serial.print(F("LCD_THC_1.1 Free Ram ---> ") ); Serial.println(freeMemory() );
            }
        if (rec_data.recnr-1 != timers.last_recnr) { ct_missed_recs = rec_data.recnr-timers.last_recnr-1;  }
+       //Serial.print(rec_data.temp );  Serial.print("C  ");  
+       //Serial.print(rec_data.press ); Serial.print("V  ");  
+       //Serial.print(rec_data.hum );   Serial.print("%  ");  
+       //Serial.print(rec_data.recnr ); spln();
 #ifdef D_REMOTE_ONLY
-       rf01.temp    = rec_data.temp / 100.0F ;
-       rf01.co2     = rec_data.press;
+       rf01.temp    = (rec_data.temp / 100.0F )-0.5;
+       rf01.co2     = rec_data.press - 60;      
 #else
        rf01.temp    =   rec_data.temp ;  //V20, V21 
+       rf01.press   =   rec_data.press; 
 #endif
        rf01.hum     =   rec_data.hum ;        
-       rf01.press   =   rec_data.press; 
-       //spe(rf01.temp); spe(rf01.hum); spe(rf01.press); spln(); 
        if (rf01.hum > 999) rf01.hum = 111;
      }  //vglcs else
   } // if manager.recfromAckTimeout 
@@ -718,9 +752,7 @@ void loop() {  //***************************************************************
      radio_retry_counter++;
      radio_retry_event_counter++;
   }
-  //update_time(timers); 
-
-   snprintf(tl_le.txt, 11,    "%s", sprintTime() );           hfq_message (lower_disp, tl_le); 
+  snprintf(tl_le.txt, 11,    "%s", sprintTime(1) );           hfq_message (lower_disp, tl_le); 
 
   if (timers.diff_radio_upd <= 1 ) {                   // >= radio_retry_counter * 175 125 - 2 recs missed as per 32 sec repetition 
      //snprintf(time_line.txt, g_mess_len, "%s  %2d", sprintTime(),int(rf01.hum) );                                           //Bad Hack 2112f
@@ -738,8 +770,9 @@ void loop() {  //***************************************************************
   lcd.setCursor ( 9,2);  lcd.print("        ");
   lcd.setCursor ( 8,2);  lcd.print( rf01.hum        ,0);  lcd.print("%");
   lcd.setCursor (13,2);  //lcd.print( stripe_called );  lcd.print(lux);   lcd.setCursor (17,2);   lcd.print("lux");*/
-                                     
-  rw = lux; if (rw <= 0 ) rw = 1;
+
+#if defined(D_STRIPES)                                     
+rw = lux; if (rw <= 0 ) rw = 1;
   g_light =   1 * ( 32 -               ( 32.0 * log10(rw)  / 3.41759273) )  ;  // (3.6124 * 1.0321))  // 0 lux - 32
     //       32 ist das Minimum                ( gibt dann 1 bei max lumen 512 bzw ln 512 = 2,7093)     
     //                                         (           1              2048 bzw ln 2048 = 3,3113 --> 3.41759273)
@@ -757,6 +790,7 @@ void loop() {  //***************************************************************
   Set_Strip(LED_ti, Pin_to,    ACTIVELedCount, 1, rf01.temp,  outer_ul,   outer_ol ); 
   Set_Strip(LED_ti, Pin_humo,  ACTIVELedCount, 1, rf01.hum ,      10.0,      100.0 );       
   snprintf(act_ind.txt, 3, "%s", "ES") ; hfq_message(upper_disp, act_ind);//lineln(" -> ", millis()); //SPIERR
+#endif  //D_STRIPES
     
 //*************************************************************************************************************************************************************
   #if defined(D_V20)
@@ -833,13 +867,23 @@ void loop() {  //***************************************************************
         snprintf(uppr_hdr_le.txt,  6, /*g_mess_len*/ "%s%02d.%02dC ", ((rf01.temp>0) ? "" : "-"), abs(int(rf01.temp)), abs(int ((rf01.temp - int(rf01.temp) )*100)));
         hfq_message  (upper_disp, uppr_hdr_le);                                    
         upd_tab_n_disp(   rf01.temp, mnmx_data,  curve_group, rftemp_poi);
-
+        // Like humidity?
         snprintf(tl_mid.txt, 4, "%2d%s", int(rf01.hum+0.5), "%");  hfq_message (lower_disp, tl_mid);
         if ( (rf01.hum >= 10.0) and ( rf01.hum <= 110.0 ) ){
            upd_tab_n_disp(   rf01.hum,    mnmx_data,  curve_group, rfhum_poi);       
         } else {
           lineln("rf01.hum  not imported, inv. val: ",rf01.hum);             
         }
+                
+        // Like local CO2?
+        // snprintf(lwr_hdr_re.txt,  5, /*g_mess_len-11,*/  "%4d",   int(local.co2) ) ;
+        //hfq_message  (lower_disp, lwr_hdr_re); 
+        //if ((local.co2 >=380.0) && (local.co2 <=3000.0)) {
+        //   upd_tab_n_disp( local.co2,  mnmx_data,  curve_group,    co2_poi);
+        //} else {
+        //  lineln("local.co2  not imported, inv. val: ",local.co2);             
+        //}
+        
         
         #else
         
@@ -873,7 +917,7 @@ void loop() {  //***************************************************************
         upd_tab_n_disp(    rf01.temp, mnmx_data,  curve_group, rftemp_poi);
         
         if ( (rf01.hum >= 10.0) and ( rf01.hum <= 110.0 ) ){
-           upd_tab_n_disp( rf01.hum,  mnmx_data,  curve_group,    hum_poi);
+           upd_tab_n_disp( rf01.hum,  mnmx_data,  curve_group,  rfhum_poi);
         } else {
           lineln("rf01.hum  not imported, inv. val: ",rf01.hum);             
         }
@@ -890,7 +934,7 @@ void loop() {  //***************************************************************
 } // void loop
 
 //*******************************************************************************************************************************************************************
-  
+#if defined(D_STRIPES)  
 void Set_Strip(WS2812 LED, uint8_t Pin, uint8_t led_av, uint8_t DispType, float curr_val, float data_ul, float data_ol) {  
   
   float   data_area, data_delta, led_per_unit; 
@@ -986,3 +1030,4 @@ void CleanAndSet(WS2812 LED, uint8_t from, uint8_t to, cRGB val ) {  //*********
      
   LED.sync();  //**** typ. elapsed time für 10.000 ist 40 sec, mess 10 sec , hidden time is 30 sec --> 1 ms visible, 3 ms hidden 4 ms total für 120 LEDs *********************
 } 
+#endif

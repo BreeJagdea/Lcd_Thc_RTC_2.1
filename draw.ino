@@ -102,7 +102,7 @@ void redraw(curve_struct cr_grp[], uint8_t &icg, boolean full) {
      {
      //cr_grp[icg].disp->fillRect(black_begin,  cr_grp[icg].y_upper_bound,   l_x_wide,      cr_grp[icg].y_area  /*black_hight*/, bg_color); //xfrom=next point, yfrom=oben=239; width=breite pix; hight=hight pix=-area=-240; color
      //                         X from        Y from                       X to           Y to 
-     cr_grp[icg].disp->drawLine(black_end,  cr_grp[icg].y_upper_bound,   black_end,   cr_grp[icg].y_area  , BLACK);  
+     cr_grp[icg].disp->drawLine(black_end,  cr_grp[icg].y_upper_bound,   black_end,   (cr_grp[icg].y_area)  , BLACK);   
      }
   }  //not full
   
@@ -117,10 +117,10 @@ void redraw(curve_struct cr_grp[], uint8_t &icg, boolean full) {
      //line("RDRW Clean Line at x=", s_l_x_line) ;spln();
      ATOMIC_BLOCK(ATOMIC_RESTORESTATE) { cr_grp[icg].disp->drawLine (s_l_x_line,  cr_grp[icg].y_lower_bound, s_l_x_line, -(cr_grp[icg].y_area), BLACK);}
   }
-  //line("RDRW Draw Line  at x=", l_x_line) ;spln();
+  line("RDRW Draw Line  at x=", l_x_line); line(" Upper ",cr_grp[icg].y_upper_bound);line(" Lower ",cr_grp[icg].y_lower_bound);line(" Area ",cr_grp[icg].y_area);spln();
   if (l_x_line > x_end_point) {spe(l_x_line);sp(F("Limit to "));    l_x_line=x_end_point;   spe(l_x_line); spln(); } 
-  //                                                               X from               Y from         X to                Y to 
- ATOMIC_BLOCK(ATOMIC_RESTORESTATE) { cr_grp[icg].disp->drawLine (l_x_line,  cr_grp[icg].y_upper_bound, l_x_line,  cr_grp[icg].y_lower_bound /*y_area*/, WHITE); s_l_x_line = l_x_line; }
+  //                                                               X from               Y from         X end                Y end    //Adafruit_GFX
+ ATOMIC_BLOCK(ATOMIC_RESTORESTATE) { cr_grp[icg].disp->drawLine (l_x_line,  cr_grp[icg].y_upper_bound, l_x_line,  cr_grp[icg].y_lower_bound/*cr_grp[icg].y_upper_bound+y_area*/, WHITE); s_l_x_line = l_x_line; }
   
 #endif
   //sp(F("Redraw done")); line(" at: ",sprintTime();spln();

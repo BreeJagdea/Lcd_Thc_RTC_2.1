@@ -363,7 +363,7 @@ void init_display (Adafruit_ILI9341 &disp, boolean first){
      disp.setCursor(0, 0);  disp.setTextColor(bg_color); disp.print(F("Anu & Ulrich"));
      sp(F("Init Black 2      "));      sp(millis()); spln();
   }
-   sp(F("Init Display HW done "));  sp(millis()); line(F(" , "), sprintTime());  spln();
+   sp(F("Init Display HW done "));  sp(millis()); line(F(" , "), sprintTime(1));  spln();
 }
 
 /*void LCD_Init(){  //****************************************************************************************** LCD
@@ -462,7 +462,7 @@ void group_boundaries(curve_struct cr_grp[]){
      curve_group[1].y_area        =  curve_group[1].y_lower_bound - curve_group[1].y_upper_bound + 1;
      spe(curve_group[1].y_upper_bound); spe(curve_group[1].y_lower_bound); spe(curve_group[1].y_area);sp(" V21 RO")spln();
      
-     curve_group[2].y_upper_bound= 0                             + y_beg + 2*y_size_mdm  - 4        ;        //area upper 2 lines
+     curve_group[2].y_upper_bound= 0                             + y_beg + 2*y_size_mdm  - 4        ;        //area upper 2 lines 
      curve_group[2].y_lower_bound= (curve_group[2].y_height-1)                                      ;        //area for lower two small line
      curve_group[2].y_area       =  curve_group[2].y_lower_bound - curve_group[2].y_upper_bound +1  ;
      spe(curve_group[2].y_upper_bound); spe(curve_group[2].y_lower_bound); spe(curve_group[2].y_area); sp(" V21 RO");spln(); 
@@ -537,5 +537,23 @@ void border_frame(curve_struct cr_grp[], uint8_t icg, Adafruit_ILI9341 &disp ){
      curve_group[i].disp->drawLine(318,   0, 318, 239, RED);   //runter re
      curve_group[i].disp->drawLine(319,   0, 319, 239, BLUE);  //runter re  */
   // in V1 66 zu 214   120 line erased by black graph square
+}
+
+void stripes_limit(){
+#if defined (D_STRIPES)
+  if (timers.dst) {
+  local_ul = summer_local_ul ;
+  local_ol = summer_local_ol ;  
+  outer_ul = summer_outer_ul ;
+  outer_ol = summer_outer_ol ;
+  sp("DST - Summer: "); 
+} else {
+  local_ul = winter_local_ul ;
+  local_ol = winter_local_ol ;  
+  outer_ul = winter_outer_ul ;
+  outer_ol = winter_outer_ol ;
+  sp("No DST - Winter: ");
+}
+#endif 
 }
 // EOF

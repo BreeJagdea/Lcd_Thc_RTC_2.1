@@ -14,12 +14,12 @@ if (gl_xpic == 0) {       //  new day   0       22
   if ( (l_from == 0) && (l_to != gl_sd_anz -1) )  {   //  init or new day 2     0    
      l_from = gl_xpic;                               //                  1           
      l_to   = l_from + gl_sd_anz -1;   // last gets lost
-     sp("Leaving   Init / new day round 2 with");spe(gl_xpic); spe(l_from); spe(l_to); spln();
+     sp("SDC: Leaving   Init / new day round 2 with");spe(gl_xpic); spe(l_from); spe(l_to); spln();
      }
 }
 
 if (gl_disp_x != gl_disp_x_old) {
-    sp(timers.sec_of_today);sp(" / ");sp(gl_xpic);sp(" (");sp(gl_disp_x); sp("), "); sp(sprintTime()); sp(" <--> "); sp(sprintTime2( ( float(gl_xpic) * gl_fl_sec_of_a_day / gl_fl_hist_size) + 0.5) );
+    sp(timers.sec_of_today);sp(" / ");sp(gl_xpic);sp(" (");sp(gl_disp_x); sp("), "); sp(sprintTime(1)); sp(" <--> "); sp(sprintTime2( ( float(gl_xpic) * gl_fl_sec_of_a_day / gl_fl_hist_size) + 0.5) );
     spe(l_from);sp("(");sp(sprintTime2( (float(l_from) * gl_fl_sec_of_a_day / gl_fl_hist_size) + 0.5) );sp(")"); spe(l_to);sp("(");sp(sprintTime2( ( float(l_to) * gl_fl_sec_of_a_day / gl_fl_hist_size) + 0.5) ); sp(")"); spln();
     gl_disp_x_old = gl_disp_x;
 }
@@ -62,5 +62,5 @@ if (gl_xpic > l_to) {
       snprintf(ad_hoc.txt, 16, "SD OP ErrorErEr") ; hfq_message(lower_disp, ad_hoc); spln(ad_hoc.txt); 
     }
 }
-#endif
+#endif D_use_SD
 }

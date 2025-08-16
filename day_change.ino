@@ -1,6 +1,6 @@
 void for_day_change (curve_struct cr_grp[], uint8_t icg, d_obj_struct data[], boolean id)  {  // data_struct &tmin, data_struct &tmax, data_struct &ct ) {
   
-     sp(F("Day Change")); update_time(timers); line(" at: ",sprintTime()); Serial.flush();
+     sp(F("Day Change")); update_time(timers); line(" at: ",sprintTime(1)); Serial.flush();
      //if (idp) init_display (*cr_grp[icg].disp, false);    //upper_disp.setTextSize(2); upper_disp.setTextColor(WHITE, BLACK); upper_disp.setCursor(10, 10  ); upper_disp.print("upper init"); //delay(100);
      //init_display (*cr_grp[icg].disp, false);
      line(F(", for CurveGroup "),icg); Serial.flush(); line(F(", Init Display is: "), id ? "true":"false"); Serial.flush(); spln();Serial.flush();
@@ -39,7 +39,7 @@ void for_day_change (curve_struct cr_grp[], uint8_t icg, d_obj_struct data[], bo
 
 #ifdef D_V20           
      update_time(timers);
-     line(F("Manage Arrays "),  sprintTime()); spln(); 
+     line(F("Manage Arrays "),  sprintTime(1)); spln(); 
      for (uint16_t i = 0; i < gl_hist_size; i++) {   
          cr_grp[icg].arr_prev[i] = cr_grp[icg].arr_curr[i];  //One could do it with pointer prev and curr, but one hast to loop anyways for wiping out today
          cr_grp[icg].arr_curr[i] = c32000;
@@ -54,7 +54,7 @@ void for_day_change (curve_struct cr_grp[], uint8_t icg, d_obj_struct data[], bo
          }  
      }
      update_time(timers);
-     line(F("Manage Arrays processed at "),sprintTime());spln();
+     line(F("Manage Arrays processed at "),sprintTime(1));spln();
      
      data[icg].ds_cur.fval    = (float) cr_grp[icg].val_min / data[icg].ds_cur.r2;
      data[icg].ds_cur.ival_10 =         cr_grp[icg].val_min ;  
@@ -77,14 +77,10 @@ void for_day_change (curve_struct cr_grp[], uint8_t icg, d_obj_struct data[], bo
 #endif
      cr_grp[icg].redraw=true;  // rarely required bcz of min, max = ct.fval, but y'days data not 
      line(F("Day Change done for CurveGroup "),icg); update_time(timers); line(", at:",timers.hour);line(":", timers.min);line(":", timers.sec);spln(); spln();
+     stripes_limit();
+     
+ //spe(local_ul); spe(local_ol);spe(outer_ul); spe(outer_ol);spln();spln();
+spln();
 }
-
-
-
-
-
-
-
-
 
 //EOF
