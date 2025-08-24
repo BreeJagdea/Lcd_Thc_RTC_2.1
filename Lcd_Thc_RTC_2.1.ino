@@ -2,7 +2,7 @@
 https://lowpowerlab.github.io/MoteinoCore/package_LowPowerLab_index.json
 */
 
-/* GPL V3 */
+/* GPLv3 */
 
 #define  D_V20        // comment it  ->  V21 becomes active
 #define  D_STRIPES
@@ -668,8 +668,8 @@ void loop() {  //***************************************************************
        //Serial.print(rec_data.hum );   Serial.print("%  ");  
        //Serial.print(rec_data.recnr ); spln();
 #ifdef D_REMOTE_ONLY
-       rf01.temp    = (rec_data.temp / 100.0F )-0.5;
-       rf01.co2     = rec_data.press - 60;      
+       rf01.temp    = (rec_data.temp / 100.0F )-0.3;
+       rf01.co2     = rec_data.press - 10;      
 #else
        rf01.temp    =   rec_data.temp ;  //V20, V21 
        rf01.press   =   rec_data.press; 
